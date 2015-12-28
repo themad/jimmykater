@@ -87,7 +87,7 @@ void callback(char* topic, byte* payload, unsigned int length) {
     // Copy the payload to the new buffer
     memcpy(p, payload, length);
   
-    long ircode = strtol(p, NULL, 0);
+    int ircode = atoi(p);
   
     Serial.print("Message arrived [");
     Serial.print(topic);
@@ -97,22 +97,23 @@ void callback(char* topic, byte* payload, unsigned int length) {
     Serial.print(" -> ");
       
     Serial.println();
-    client.publish("jimmykater/status", "fishing");
 
     myservo.attach(servoPin);
     
-    if ( 0 <= ircode <= 170 ) {
+    if ( 0 <= ircode && ircode <= 170 ) {
+      client.publish("jimmykater/status", String(ircode).c_str());
       myservo.write(ircode);
     };
   
-    delay(300);
+    delay(40);
     myservo.detach();
     free(p);
-  } else if ( String(topic) == "jimmykater/command" || String(topic) == "winkekatze/allcats") {
+  } else if ( String(topic) == "jimmykater/command" || String(topic) == "winkekatze/allcats" ) {
     wink();
   } else if ( String(topic) == "fux/door/status" ) {
     wink();
   }
+  client.publish("jimmykater/status", "fishing");
 }
 
 void wink() {
