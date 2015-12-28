@@ -25,6 +25,8 @@ long lastMsg = 0;
 char msg[50];
 int value = 0;
 
+uint32_t eyecolor = 0;
+
 void setup_wifi();
 void callback(char* topic, byte* payload, unsigned int length);
 void wink();
@@ -33,6 +35,8 @@ void setup() {
   Serial.begin(115200);
 
   Serial.write("jimmkater booting....");
+
+  eyecolor = pixels.Color(255, 0, 255);
 
   pixels.begin();
   for ( int i = 0; i < numLEDs; i++ ) {
@@ -82,7 +86,6 @@ void callback(char* topic, byte* payload, unsigned int length) {
   if ( String(topic) == "jimmykater/paw/command" ) {
     char* p = (char*)malloc(length + 1);
     p[length] = 0;
-    char **w;
   
     // Copy the payload to the new buffer
     memcpy(p, payload, length);
@@ -102,7 +105,31 @@ void callback(char* topic, byte* payload, unsigned int length) {
     wink();
   } else if ( String(topic) == "fux/door/status" ) {
     wink();
+  } else if ( String(topic) == "jimmykater/eye/set" ) {
+    char* p = (char*)malloc(length + 1);
+    p[length] = 0;
+  
+    // Copy the payload to the new buffer
+    memcpy(p, payload, length);
+
+    String colstr(p);
+    if ( colstr == "pink" ) {
+      eyecolor = pixels.Color(255, 0, 255);
+    } else if ( colstr == "red" ) {
+      eyecolor = pixels.Color(255, 0, 0);
+    } else if ( colstr == "green" ) {
+      eyecolor = pixels.Color(0, 255, 0);
+    } else if ( colstr == "blue" ) {
+      eyecolor = pixels.Color(0, 0, 255);
+    } else if ( colstr == "cyan" ) {
+      eyecolor = pixels.Color(0, 255, 255);
+    } else if ( colstr == "yellow" ) {
+      eyecolor = pixels.Color(255, 255, 0);
+    }
+
+    free(p);
   }
+  
   client.publish("jimmykater/status", "fishing");
 }
 
@@ -111,7 +138,7 @@ void wink() {
   const float w = 2*pi/800;
 
   for ( int i = 0; i < numLEDs; i++) {
-    pixels.setPixelColor(i, pixels.Color(255, 0 ,255));
+    pixels.setPixelColor(i, eyecolor);
   }
   pixels.show();
 
@@ -149,6 +176,7 @@ void reconnect() {
       client.subscribe("jimmykater/paw/command");
       client.subscribe("jimmykater/command");
       client.subscribe("winkekatze/allcats");
+      client.subscribe("jimmykater/eye/set");
     } else {
       Serial.print("failed, rc=");
       Serial.print(client.state());
