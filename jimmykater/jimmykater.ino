@@ -88,24 +88,14 @@ void callback(char* topic, byte* payload, unsigned int length) {
     memcpy(p, payload, length);
   
     int ircode = atoi(p);
-  
-    Serial.print("Message arrived [");
-    Serial.print(topic);
-    Serial.print("] ");
-  
-    Serial.print(p);
-    Serial.print(" -> ");
-      
-    Serial.println();
 
     myservo.attach(servoPin);
     
     if ( 0 <= ircode && ircode <= 170 ) {
-      client.publish("jimmykater/status", String(ircode).c_str());
       myservo.write(ircode);
     };
   
-    delay(40);
+    delay(300);
     myservo.detach();
     free(p);
   } else if ( String(topic) == "jimmykater/command" || String(topic) == "winkekatze/allcats" ) {
