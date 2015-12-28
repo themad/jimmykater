@@ -6,9 +6,9 @@
 
 // Update these with values suitable for your network.
 
-const char* ssid = "ssid";
-const char* password = "password";
-const char* mqtt_server = "mqtt.z9";
+const char* ssid = "32C3-open-legacy";
+const char* password = "";
+const char* mqtt_server = "test.mosquitto.org";
 
 Servo myservo;
 const int servoPin = 2;
@@ -17,7 +17,7 @@ const int midPosition = 100;
 const int LEDPin =  0; // ist vielleicht auch 3. Mal testen und Daumen drücken.
 const int numLEDs = 2;
 
-Adafruit_NeoPixel pixels = Adafruit_NeoPixel(numLEDs, LEDPin, NEO_GRB + NEO_KHZ800);
+Adafruit_NeoPixel pixels = Adafruit_NeoPixel(numLEDs, LEDPin, NEO_RGB + NEO_KHZ800);
 
 WiFiClient espClient;
 PubSubClient client(espClient);
@@ -25,13 +25,20 @@ long lastMsg = 0;
 char msg[50];
 int value = 0;
 
+void setup_wifi();
+void callback(char* topic, byte* payload, unsigned int length);
+void wink();
+
 void setup() {
   Serial.begin(115200);
 
+  Serial.write("jimmkater booting....");
+
+  pixels.begin();
   for ( int i = 0; i < numLEDs; i++ ) {
     pixels.setPixelColor(i, pixels.Color(0, 255, 0));
   }
-  pixels.begin();
+  
   pixels.show();
   
   setup_wifi();
@@ -46,7 +53,7 @@ void setup() {
   for ( int i = 0; i < numLEDs; i++ ) {
     pixels.setPixelColor(i, pixels.Color(0, 0, 0));
   }
-  pixels.begin();
+ 
   pixels.show();
 }
 
@@ -101,8 +108,8 @@ void callback(char* topic, byte* payload, unsigned int length) {
     delay(300);
     myservo.detach();
     free(p);
-  } else if ( String(topic) == "jimmykater/command" ) {
-    wink();    
+  } else if ( String(topic) == "jimmykater/command" || String(topic) == "winkekatze/allcats") {
+    wink();
   } else if ( String(topic) == "fux/door/status" ) {
     wink();
   }
@@ -113,7 +120,7 @@ void wink() {
   const float w = 2*pi/800;
 
   for ( int i = 0; i < numLEDs; i++) {
-    pixels.setPixelColor(i, pixels.Color(255, 0 ,0));
+    pixels.setPixelColor(i, pixels.Color(255, 0 ,255));
   }
   pixels.show();
 
@@ -150,7 +157,7 @@ void reconnect() {
       // ... and resubscribe
       client.subscribe("jimmykater/paw/command");
       client.subscribe("jimmykater/command");
-      client.subscribe("fux/door/status");
+      client.subscribe("winkekatze/allcats");
     } else {
       Serial.print("failed, rc=");
       Serial.print(client.state());
@@ -160,6 +167,7 @@ void reconnect() {
     }
   }
 }
+
 void loop() {
   if (!client.connected()) {
     reconnect();
