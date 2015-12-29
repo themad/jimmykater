@@ -93,6 +93,7 @@ void callback(char* topic, byte* payload, unsigned int length) {
     int ircode = atoi(p);
 
     myservo.attach(servoPin);
+    delay(30);
     
     if ( 0 <= ircode && ircode <= 170 ) {
       myservo.write(ircode);
@@ -143,6 +144,11 @@ void wink() {
   pixels.show();
 
   myservo.attach(servoPin);
+
+  delay(20);
+
+  myservo.write(midPosition);
+  delay(300);
 
   for( float t = 0.0; t < 2000; t += 15 ) {
      float pos = midPosition + 70.0*sin( w * t ) * pow(2.714, -(w/15.0) * t);
