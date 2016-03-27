@@ -4,17 +4,21 @@
 #include <stdlib.h>
 #include <Adafruit_NeoPixel.h>
 
-// Update these with values suitable for your network.
+// WifiManager
+#include <DNSServer.h>
+#include <ESP8266WebServer.h>
+#include <WiFiManager.h>          //https://github.com/tzapu/WiFiManager
 
-const char* ssid = "32C3-open-legacy";
-const char* password = "";
+// this can stay test.mosquitto.org for the global clowder ;)
 const char* mqtt_server = "test.mosquitto.org";
 
+// Servo directly connected to GPIO2
 Servo myservo;
 const int servoPin = 2;
 const int midPosition = 100;
 
-const int LEDPin =  0; // ist vielleicht auch 3. Mal testen und Daumen drücken.
+// LEDs connected to GPIO0. They are running with a lower voltage (around 4.3V) so the 3.3V output level is enough to trigger high
+const int LEDPin =  4;
 const int numLEDs = 2;
 
 Adafruit_NeoPixel pixels = Adafruit_NeoPixel(numLEDs, LEDPin, NEO_RGB + NEO_KHZ800);
@@ -32,6 +36,7 @@ void callback(char* topic, byte* payload, unsigned int length);
 void wink();
 
 void setup() {
+  // if we didn't use the serial output we could gain 2 GPIOs. 
   Serial.begin(115200);
 
   Serial.write("jimmkater booting....");
@@ -42,14 +47,14 @@ void setup() {
   for ( int i = 0; i < numLEDs; i++ ) {
     pixels.setPixelColor(i, pixels.Color(0, 255, 0));
   }
-  
+
   pixels.show();
-  
+
   setup_wifi();
-  
+
   client.setServer(mqtt_server, 1883);
   client.setCallback(callback);
-  
+
   myservo.attach(servoPin);
   myservo.write(midPosition);
   delay(50);
@@ -57,29 +62,13 @@ void setup() {
   for ( int i = 0; i < numLEDs; i++ ) {
     pixels.setPixelColor(i, pixels.Color(0, 0, 0));
   }
- 
   pixels.show();
 }
 
 void setup_wifi() {
-
-  delay(10);
-  // We start by connecting to a WiFi network
-  Serial.println();
-  Serial.print("Connecting to ");
-  Serial.println(ssid);
-
-  WiFi.begin(ssid, password);
-
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(500);
-    Serial.print(".");
-  }
-
-  Serial.println("");
-  Serial.println("WiFi connected");
-  Serial.println("IP address: ");
-  Serial.println(WiFi.localIP());
+  WiFiManager wifiManager;
+  
+  wifiManager.autoConnect("Winkekatze");
 }
 
 void callback(char* topic, byte* payload, unsigned int length) {
