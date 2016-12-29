@@ -32,6 +32,10 @@ const int numLEDs = 2;
 
 Adafruit_NeoPixel pixels = Adafruit_NeoPixel(numLEDs, LEDPin, NEO_RGB + NEO_KHZ800);
 
+auto RED = pixels.Color(255,0,0);
+auto GREEN = pixels.Color(0, 255,0);
+auto BLUE = pixels.Color(0, 0, 255);
+
 WiFiClient espClient;
 PubSubClient client(espClient);
 long lastMsg = 0;
@@ -44,8 +48,19 @@ void setup_wifi();
 void callback(char* topic, byte* payload, unsigned int length);
 void wink();
 
+void eye_debug(uint32_t color) {
+  for ( int i = 0; i < numLEDs; i++ ) {
+    pixels.setPixelColor(i, color);
+  }
+  pixels.show();
+};
+
 //flag for saving data
 bool shouldSaveConfig = false;
+
+void configModeCallback(WiFiManager *myWiFiManager) {
+  eye_debug(pixels.Color(255,0,255));
+}
 
 //callback notifying us of the need to save config
 void saveConfigCallback () {
@@ -101,11 +116,8 @@ void setup() {
   eyecolor = pixels.Color(255, 0, 255);
 
   pixels.begin();
-  for ( int i = 0; i < numLEDs; i++ ) {
-    pixels.setPixelColor(i, pixels.Color(0, 255, 0));
-  }
 
-  pixels.show();
+  eye_debug(GREEN);
 
   readConfig();
   setup_wifi();
@@ -115,12 +127,10 @@ void setup() {
 
   myservo.attach(servoPin);
   myservo.write(midPosition);
+  eye_debug(pixels.Color(0,255,255));
   delay(50);
   myservo.detach();
-  for ( int i = 0; i < numLEDs; i++ ) {
-    pixels.setPixelColor(i, pixels.Color(0, 0, 0));
-  }
-  pixels.show();
+  eye_debug(pixels.Color(0,0,0));
 }
 
 void setup_wifi() {
@@ -134,17 +144,20 @@ void setup_wifi() {
   
   WiFiManager wifiManager;
 
+  eye_debug(BLUE);
   //set config save notify callback
   wifiManager.setSaveConfigCallback(saveConfigCallback);
+  wifiManager.setAPCallback(configModeCallback);
 
   //add all your parameters here
   wifiManager.addParameter(&custom_mqtt_server);
   wifiManager.addParameter(&custom_mqtt_port);
   wifiManager.addParameter(&custom_cat_name);
 
-  wifiManager.setTimeout(120);
+  wifiManager.setConfigPortalTimeout(120);
 
   if (!wifiManager.autoConnect("Winkekatze")) {
+    eye_debug(RED);
     Serial.println("failed to connect and hit timeout");
     delay(3000);
     //reset and try again, or maybe put it to deep sleep
