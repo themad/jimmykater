@@ -19,7 +19,7 @@
 // this can stay test.mosquitto.org for the global clowder ;)
 char mqtt_server[255] = "test.mosquitto.org";
 char mqtt_port[6] = "1883";
-char cat_name[34] = "jimmykater";
+char cat_name[34] = "33c3cat";
 
 // Servo directly connected to GPIO2
 Servo myservo;
