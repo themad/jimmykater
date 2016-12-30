@@ -19,16 +19,19 @@
 // this can stay test.mosquitto.org for the global clowder ;)
 char mqtt_server[255] = "test.mosquitto.org";
 char mqtt_port[6] = "1883";
-char cat_name[34] = "33c3cat";
+char cat_name[34] = "33c3katze";
 
 // Servo directly connected to GPIO2
 Servo myservo;
-const int servoPin = 2;
+const int servoPin = 5;
 const int midPosition = 100;
 
 // LEDs connected to GPIO0. They are running with a lower voltage (around 4.3V) so the 3.3V output level is enough to trigger high
-const int LEDPin =  0;
+const int LEDPin =  14;
 const int numLEDs = 2;
+
+const int TRIGGER_PIN = 4;
+
 
 Adafruit_NeoPixel pixels = Adafruit_NeoPixel(numLEDs, LEDPin, NEO_RGB + NEO_KHZ800);
 
@@ -118,6 +121,14 @@ void setup() {
   pixels.begin();
 
   eye_debug(GREEN);
+
+
+  pinMode(TRIGGER_PIN, INPUT);
+
+  if ( digitalRead(TRIGGER_PIN) == LOW ) {
+    SPIFFS.format();
+    ESP.eraseConfig();
+  };
 
   readConfig();
   setup_wifi();
